@@ -16,6 +16,7 @@ export default class Environment {
 
         this.bakeModel();
         this.setModel();
+        this.setLighting();
     }
 
     bakeModel() {
@@ -30,5 +31,9 @@ export default class Environment {
         this.scene.add(this.bakedModel.getModel());
     }
 
-    update() {}
+    setLighting() {
+        // LIGHTS REMOVED FOR REVERT (Using Baked Lighting)
+    }
+
+    update() { }
 }

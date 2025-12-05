@@ -53,22 +53,54 @@ export default class Resources extends EventEmitter {
         // Load each source
         for (const source of this.sources) {
             if (source.type === 'gltfModel') {
-                this.loaders.gltfLoader.load(source.path, (file) => {
-                    this.sourceLoaded(source, file);
-                });
+                this.loaders.gltfLoader.load(
+                    source.path,
+                    (file) => {
+                        this.sourceLoaded(source, file);
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading', source.path, error);
+                        this.sourceLoaded(source, null as any);
+                    }
+                );
             } else if (source.type === 'texture') {
-                this.loaders.textureLoader.load(source.path, (file) => {
-                    file.encoding = THREE.sRGBEncoding;
-                    this.sourceLoaded(source, file);
-                });
+                this.loaders.textureLoader.load(
+                    source.path,
+                    (file) => {
+                        file.encoding = THREE.sRGBEncoding;
+                        this.sourceLoaded(source, file);
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading', source.path, error);
+                        this.sourceLoaded(source, null as any);
+                    }
+                );
             } else if (source.type === 'cubeTexture') {
-                this.loaders.cubeTextureLoader.load(source.path, (file) => {
-                    this.sourceLoaded(source, file);
-                });
+                this.loaders.cubeTextureLoader.load(
+                    source.path,
+                    (file) => {
+                        this.sourceLoaded(source, file);
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading', source.path, error);
+                        this.sourceLoaded(source, null as any);
+                    }
+                );
             } else if (source.type === 'audio') {
-                this.loaders.audioLoader.load(source.path, (buffer) => {
-                    this.sourceLoaded(source, buffer);
-                });
+                this.loaders.audioLoader.load(
+                    source.path,
+                    (buffer) => {
+                        this.sourceLoaded(source, buffer);
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading', source.path, error);
+                        this.sourceLoaded(source, null as any);
+                    }
+                );
             }
         }
     }

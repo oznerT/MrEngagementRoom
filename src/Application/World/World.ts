@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import Application from '../Application';
 import Resources from '../Utils/Resources';
 import ComputerSetup from './Computer';
@@ -7,6 +8,7 @@ import Decor from './Decor';
 import CoffeeSteam from './CoffeeSteam';
 import Cursor from './Cursor';
 import Hitboxes from './Hitboxes';
+import DeskItems from './DeskItems';
 import AudioManager from '../Audio/AudioManager';
 export default class World {
     application: Application;
@@ -21,6 +23,12 @@ export default class World {
     coffeeSteam: CoffeeSteam;
     cursor: Cursor;
     audioManager: AudioManager;
+    deskItems: DeskItems;
+
+    // Interaction
+    raycaster: THREE.Raycaster;
+    mouse: THREE.Vector2;
+    currentIntersect: THREE.Intersection | null = null;
 
     constructor() {
         this.application = new Application();
@@ -35,8 +43,10 @@ export default class World {
             this.monitorScreen = new MonitorScreen();
             this.coffeeSteam = new CoffeeSteam();
             this.audioManager = new AudioManager();
+            this.deskItems = new DeskItems();
             // const hb = new Hitboxes();
             // this.cursor = new Cursor();
+            this.initInteraction();
         });
     }
 
@@ -45,5 +55,87 @@ export default class World {
         if (this.environment) this.environment.update();
         if (this.coffeeSteam) this.coffeeSteam.update();
         if (this.audioManager) this.audioManager.update();
+    }
+
+    // Add interaction logic
+    initInteraction() {
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+
+        let lastX = 0;
+        let lastY = 0;
+        let lastTime = Date.now();
+
+        window.addEventListener('mousemove', (e) => {
+            // Glitch Trigger Logic
+            const now = Date.now();
+            const dt = now - lastTime;
+            if (dt > 50) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                const speed = Math.sqrt(dx * dx + dy * dy) / dt;
+                if (speed > 3.5) {
+                    this.application.renderer.triggerGlitch(150);
+                }
+                lastX = e.clientX;
+                lastY = e.clientY;
+                lastTime = now;
+            }
+
+            // Raycaster Mouse Update
+            this.mouse.x = (e.clientX / this.application.sizes.width) * 2 - 1;
+            this.mouse.y = -(e.clientY / this.application.sizes.height) * 2 + 1;
+
+            // Hover Check
+            this.checkIntersection();
+        });
+
+        window.addEventListener('click', () => {
+            if (this.currentIntersect) {
+                switch (this.currentIntersect.object.name) {
+                    case 'gameboy':
+                        console.log('Gameboy Clicked');
+                        break;
+                    case 'coffee':
+                        console.log('Coffee Clicked');
+                        break;
+                    case 'keyboard':
+                        console.log('Keyboard Clicked - *Clack*');
+                        // Trigger glitch or sound if available
+                        this.application.renderer.triggerGlitch(300);
+                        break;
+                }
+            }
+        });
+    }
+
+    checkIntersection() {
+        if (!this.application.camera.instance) return;
+
+        this.raycaster.setFromCamera(this.mouse, this.application.camera.instance);
+
+        // Intersect with all objects in the scene
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+        if (intersects.length > 0) {
+            // Filter for specific interactable objects
+            const interactables = ['gameboy', 'coffee', 'keyboard'];
+            const hit = intersects.find(intersect => {
+                const name = intersect.object.name.toLowerCase();
+                return interactables.some(term => name.includes(term));
+            });
+
+            if (hit) {
+                this.currentIntersect = hit;
+                document.body.style.cursor = 'pointer';
+                // Optional: Highlight effect could go here
+            } else {
+                this.currentIntersect = null;
+                document.body.style.cursor = 'default';
+            }
+        } else {
+            this.currentIntersect = null;
+            document.body.style.cursor = 'default';
+        }
     }
 }

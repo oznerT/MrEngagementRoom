@@ -183,8 +183,9 @@ export default class MonitorScreen extends EventEmitter {
         };
 
         // Set iframe attributes
-        // PROD
-        iframe.src = 'https://os.henryheffernan.com/';
+        // PROD & DEV (Now using local Dopa-OS)
+        iframe.src = '/os/index.html';
+
         /**
          * Use dev server is query params are present
          *
@@ -194,7 +195,8 @@ export default class MonitorScreen extends EventEmitter {
          */
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('dev')) {
-            iframe.src = 'http://localhost:3000/';
+            // iframe.src = 'http://localhost:3000/'; // Disabled for Dopa-OS
+            iframe.src = '/os/index.html';
         }
         iframe.style.width = this.screenSize.width + 'px';
         iframe.style.height = this.screenSize.height + 'px';
@@ -204,7 +206,7 @@ export default class MonitorScreen extends EventEmitter {
         iframe.className = 'jitter';
         iframe.id = 'computer-screen';
         iframe.frameBorder = '0';
-        iframe.title = 'HeffernanOS';
+        iframe.title = 'LaRevuelta';
 
         // Add iframe to container
         container.appendChild(iframe);
@@ -344,6 +346,7 @@ export default class MonitorScreen extends EventEmitter {
         // Create material
         const material = new THREE.MeshBasicMaterial({
             map: texture,
+            color: 0x888888, // Tame the brightness
             blending: blendingMode,
             side: THREE.DoubleSide,
             opacity,
@@ -510,8 +513,8 @@ export default class MonitorScreen extends EventEmitter {
 
             const distance = Math.sqrt(
                 (camPos.x - dimPos.x) ** 2 +
-                    (camPos.y - dimPos.y) ** 2 +
-                    (camPos.z - dimPos.z) ** 2
+                (camPos.y - dimPos.y) ** 2 +
+                (camPos.z - dimPos.z) ** 2
             );
 
             const opacity = 1 / (distance / 10000);

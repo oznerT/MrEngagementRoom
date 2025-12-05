@@ -43,6 +43,16 @@ export default class Audio {
         UIEventBus.on('muteToggle', (mute: boolean) => {
             this.listener.setMasterVolume(mute ? 0 : 1);
         });
+
+        window.addEventListener(
+            'click',
+            () => {
+                if (this.context && this.context.state === 'suspended') {
+                    this.context.resume();
+                }
+            },
+            { once: true }
+        );
     }
 
     playAudio(
@@ -68,6 +78,10 @@ export default class Audio {
 
         // Setup
         const buffer = this.loadedAudio[sourceName];
+        if (!buffer) {
+            console.warn(`Audio buffer for ${sourceName} not found.`);
+            return '';
+        }
         const poolKey = sourceName + '_' + Object.keys(this.audioPool).length;
 
         let audio: THREE.Audio<any> | THREE.PositionalAudio = new THREE.Audio(
@@ -84,9 +98,9 @@ export default class Audio {
 
             const extraMaterialOptions = !POS_DEBUG
                 ? {
-                      transparent: true,
-                      opacity: 0,
-                  }
+                    transparent: true,
+                    opacity: 0,
+                }
                 : {};
 
             const sphere = new THREE.SphereGeometry(100, 8, 8);

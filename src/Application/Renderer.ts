@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader.js';
 import Application from './Application';
 import Sizes from './Utils/Sizes';
 import Camera from './Camera/Camera';
@@ -22,6 +28,10 @@ export default class Renderer {
     overlayInstance: THREE.WebGLRenderer;
     instance: THREE.WebGLRenderer;
     cssInstance: CSS3DRenderer;
+    composer: EffectComposer;
+    bloomPass: UnrealBloomPass;
+    glitchPass: GlitchPass;
+    rgbShiftPass: ShaderPass;
     raiseExposure: boolean;
     uniforms: {
         [uniform: string]: THREE.IUniform<any>;
@@ -60,6 +70,27 @@ export default class Renderer {
         this.instance.domElement.style.top = '0px';
 
         document.querySelector('#webgl')?.appendChild(this.instance.domElement);
+
+        // Post Processing (DISABLED FOR REVERT)
+        // this.composer = new EffectComposer(this.instance);
+        // const renderPass = new RenderPass(this.scene, this.camera.instance);
+        // this.composer.addPass(renderPass);
+
+        // this.bloomPass = new UnrealBloomPass(
+        //     new THREE.Vector2(this.sizes.width, this.sizes.height),
+        //     0.5, // Strength
+        //     0.4, // Radius
+        //     0.85 // Threshold
+        // );
+        // this.composer.addPass(this.bloomPass);
+
+        // this.rgbShiftPass = new ShaderPass(RGBShiftShader);
+        // this.rgbShiftPass.uniforms['amount'].value = 0.0015; // Subtle chromatic aberration
+        // this.composer.addPass(this.rgbShiftPass);
+
+        // this.glitchPass = new GlitchPass();
+        // this.glitchPass.enabled = false;
+        // this.composer.addPass(this.glitchPass);
 
         this.overlayInstance = new THREE.WebGLRenderer();
         this.overlayInstance.setSize(this.sizes.width, this.sizes.height);
@@ -102,9 +133,20 @@ export default class Renderer {
         this.overlayScene.add(this.overlay);
     }
 
+    triggerGlitch(duration: number = 200) {
+        // DISABLED FOR REVERT
+        // this.glitchPass.enabled = true;
+        // setTimeout(() => {
+        //     this.glitchPass.enabled = false;
+        // }, duration);
+    }
+
     resize() {
         this.instance.setSize(this.sizes.width, this.sizes.height);
         this.instance.setPixelRatio(Math.min(this.sizes.pixelRatio, 2));
+
+        // this.composer.setSize(this.sizes.width, this.sizes.height);
+        // this.composer.setPixelRatio(Math.min(this.sizes.pixelRatio, 2));
 
         this.cssInstance.setSize(this.sizes.width, this.sizes.height);
 
@@ -119,6 +161,7 @@ export default class Renderer {
         }
 
         this.instance.render(this.scene, this.camera.instance);
+        // this.composer.render();
         this.cssInstance.render(this.cssScene, this.camera.instance);
         this.overlayInstance.render(this.overlayScene, this.camera.instance);
         this.overlay.position.copy(this.camera.instance.position);

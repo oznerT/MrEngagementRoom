@@ -89,3 +89,14 @@ body {
         transform: translate(0.075px, 0.025px) scale(1, 1);
     }
 }
+
+@keyframes spin {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+.spinning-coin {
+    animation: spin 2.5s linear infinite;
+    width: 200px; /* Adjust size as needed */
+    height: auto;
+}

@@ -6,20 +6,30 @@ interface InfoOverlayProps {
     visible: boolean;
 }
 
-const NAME_TEXT = 'Henry Heffernan';
-const TITLE_TEXT = 'Software Engineer';
+const NAME_TEXT = 'Mr. Engagement Corp.';
+const TITLE_TEXT = 'Optimizando tu Dopamina.';
 const MULTIPLIER = 1;
 
 const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
     const visRef = useRef(visible);
     const [nameText, setNameText] = useState('');
     const [titleText, setTitleText] = useState('');
-    const [time, setTime] = useState(new Date().toLocaleTimeString());
-    const timeRef = useRef(time);
+    // Session start time
+    const [startTime] = useState<number>(Date.now());
     const [timeText, setTimeText] = useState('');
     const [textDone, setTextDone] = useState(false);
     const [volumeVisible, setVolumeVisible] = useState(false);
     const [freeCamVisible, setFreeCamVisible] = useState(false);
+
+    // Helper to format seconds into HH:MM:SS
+    const formatTimeLost = (start: number) => {
+        const now = Date.now();
+        const diff = Math.floor((now - start) / 1000);
+        const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+        const seconds = (diff % 60).toString().padStart(2, '0');
+        return `TIEMPO PERDIDO: ${hours}:${minutes}:${seconds}`;
+    };
 
     const typeText = (
         i: number,
@@ -60,16 +70,8 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
             setTimeout(() => {
                 typeText(0, '', NAME_TEXT, setNameText, () => {
                     typeText(0, '', TITLE_TEXT, setTitleText, () => {
-                        typeText(
-                            0,
-                            '',
-                            time,
-                            setTimeText,
-                            () => {
-                                setTextDone(true);
-                            },
-                            timeRef
-                        );
+                        // Start showing the timer immediately after title
+                        setTextDone(true);
                     });
                 });
             }, 400);
@@ -79,6 +81,9 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
 
     useEffect(() => {
         if (textDone) {
+            // Initial set
+            setTimeText(formatTimeLost(startTime));
+
             setTimeout(() => {
                 setVolumeVisible(true);
                 setTimeout(() => {
@@ -93,16 +98,16 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
     }, [freeCamVisible, volumeVisible]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        timeRef.current = time;
-        textDone && setTimeText(time);
-    }, [time]);
+        let interval: NodeJS.Timeout;
+        if (textDone) {
+            interval = setInterval(() => {
+                setTimeText(formatTimeLost(startTime));
+            }, 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [textDone, startTime]);
 
     return (
         <div style={styles.wrapper}>
@@ -116,16 +121,17 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
                     <p>{titleText}</p>
                 </div>
             )}
-            {timeText !== '' && (
+            {textDone && (
                 <div style={styles.lastRow}>
                     <div
                         style={Object.assign(
                             {},
                             styles.container,
-                            styles.lastRowChild
+                            styles.lastRowChild,
+                            styles.timerContainer
                         )}
                     >
-                        <p>{timeText}</p>
+                        <p style={styles.timerText}>{timeText}</p>
                     </div>
                     {volumeVisible && (
                         <div style={styles.lastRowChild}>
@@ -176,6 +182,17 @@ const styles: StyleSheetCSS = {
     lastRowChild: {
         marginRight: 4,
     },
+    timerContainer: {
+        // Optional: add specific container styles for the timer if needed
+    },
+    timerText: {
+        color: 'red',
+        // Simple blinking effect using CSS animation would be better in a real CSS file,
+        // but for inline styles we can't easily do keyframes without a style tag or external css.
+        // We'll stick to red color as requested, and maybe add a text shadow for "glow".
+        textShadow: '0 0 5px red',
+        fontWeight: 'bold',
+    }
 };
 
 export default InfoOverlay;

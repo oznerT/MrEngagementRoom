@@ -94,6 +94,11 @@ const sources: Resource[] = [
         type: 'audio',
         path: 'audio/cc/type.mp3',
     },
+    {
+        name: 'dayInTheLife',
+        type: 'audio',
+        path: 'audio/dayinthelife.mp3',
+    },
 ];
 
 export default sources;

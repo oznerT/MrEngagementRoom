@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dopa-OS v9.0 Desktop</title>
+    <style>
+        :root {
+            --bg-color: #000080;
+            /* Classic Blue Desktop */
+            --text-color: #ffffff;
+            --window-bg: #c0c0c0;
+            --window-border: #ffffff #808080 #808080 #ffffff;
+            --title-bar-bg: #000080;
+            --title-bar-text: #ffffff;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            background-image: url('wallpaper.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 1000;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Desktop Grid */
+        .desktop {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 100px);
+            grid-template-rows: repeat(auto-fill, 100px);
+            grid-auto-flow: column;
+            height: 100%;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-align: center;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px dotted #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon-img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+            font-size: 40px;
+            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.8));
+            /* Fallback for emoji icons */
+        }
+
+        .icon-label {
+            font-size: 12px;
+            text-shadow: 2px 2px 2px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 5px;
+            border-radius: 4px;
+            max-width: 90px;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.1;
+        }
+
+        /* Window System */
+        .window {
+            position: absolute;
+            background-color: var(--window-bg);
+            border: 2px solid;
+            border-color: var(--window-border);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            color: #000;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            min-width: 300px;
+            min-height: 200px;
+        }
+
+        .title-bar {
+            background: var(--title-bar-bg);
+            color: var(--title-bar-text);
+            padding: 2px 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            cursor: grab;
+        }
+
+        .close-btn {
+            background: #c0c0c0;
+            border: 1px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            width: 16px;
+            height: 16px;
+            line-height: 14px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        .close-btn:active {
+            border-color: #808080 #ffffff #ffffff #808080;
+        }
+
+        .window-content {
+            padding: 10px;
+            flex-grow: 1;
+            overflow: auto;
+        }
+
+        /* Specific Window Styles */
+        .graph-container {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #00ff00;
+            width: 100%;
+            transform-origin: left;
+        }
+
+        .minion-img {
+            width: 100%;
+            height: auto;
+            border: 2px inset #fff;
+        }
+
+        /* Mr. E Terminal Styles */
+        #win-mre .window-content {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 0;
+            position: relative;
+        }
+
+        #scroll-bait-container {
+            height: 100%;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        #bait-content {
+            height: 15000px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .full-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .camera-btn {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .camera-btn:hover {
+            background: #fff;
+        }
+
+        #user-webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reveal-text {
+            position: absolute;
+            bottom: 20%;
+            width: 100%;
+            text-align: center;
+            color: red;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <style>
+        /* --- VIGILANCIA THREAT DASHBOARD --- */
+        .threat-grid {
+            display: grid;
+            gap: 10px;
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid #333;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.05);
+        }
+
+        .threat-entry {
+            border: 1px solid #004400;
+            padding: 8px;
+            background: rgba(0, 20, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s;
+        }
+
+        .threat-entry:hover {
+            background: rgba(0, 40, 0, 0.8);
+            border-color: #0f0;
+        }
+
+        .threat-target {
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 4px;
+            text-shadow: 0 0 2px rgba(0, 255, 0, 0.5);
+            font-size: 1.1em;
+        }
+
+        .threat-analysis {
+            font-size: 0.9em;
+            line-height: 1.3;
+            color: #bbb;
+        }
+
+        .status-high {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .status-action {
+            color: #00ffff;
+        }
+
+        .status-critical {
+            color: #ff0000;
+            font-weight: bold;
+            text-shadow: 0 0 5px #f00;
+        }
+
+        .status-error {
+            color: #ff00ff;
+        }
+
+        .status-passive {
+            color: #888;
+        }
+
+        .blink-critical {
+            border: 1px solid #ff0000;
+            animation: threat-pulse 2s infinite;
+        }
+
+        @keyframes threat-pulse {
+            0% {
+                box-shadow: inset 0 0 5px rgba(255, 0, 0, 0.2);
+                background: rgba(50, 0, 0, 0.2);
+            }
+
+            50% {
+                box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.5);
+                background: rgba(80, 0, 0, 0.4);
+            }
+
+            100% {
+                box-shadow: inset 0 0 5px rgba(255, 0, 0, 0.2);
+                background: rgba(50, 0, 0, 0.2);
+            }
+        }
+    </style>
+    <style>
+        /* --- LOW ENGAGEMENT / DISCARDED THEME --- */
+        #win-low-engagement .window-content {
+            background-color: #e0e0e0;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            background-image: linear-gradient(#ccc 1px, transparent 1px), linear-gradient(90deg, #ccc 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #win-low-engagement .title-bar {
+            background: #555;
+            color: #fff;
+            border-bottom: 2px solid #333;
+        }
+
+        .le-header {
+            padding: 20px;
+            background: #fff;
+            border-bottom: 3px solid #000;
+            text-align: left;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .le-header h2 {
+            margin: 0;
+            color: #d32f2f;
+            /* Red for Failure */
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+        }
+
+        .le-header span {
+            font-size: 0.9rem;
+            color: #555;
+            display: block;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .le-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .le-card {
+            background: #fff;
+            border: 1px solid #999;
+            padding: 0;
+            /* Padding handled inside */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .le-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.15);
+            border-color: #666;
+        }
+
+        .le-system-note {
+            background: #ffebee;
+            /* Light red */
+            color: #c62828;
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-bottom: 1px solid #ffcdd2;
+            font-family: monospace;
+        }
+
+        .le-card-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .le-card h3 {
+            margin: 5px 0 10px 0;
+            font-size: 1.1rem;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .le-tagline {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* DETAIL VIEW */
+        #le-main-view,
+        #le-details-view {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #le-details-view {
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .le-detail-content {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .le-back-btn {
+            background: #ddd;
+            border: none;
+            color: #333;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .le-back-btn:hover {
+            background: #ccc;
+        }
+
+        .le-detail-title {
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .le-detail-body {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .le-footer {
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            margin-top: auto;
+            font-size: 0.8rem;
+        }
+    </style>
+
+    <style>
+        /* --- NEWSPAPER APP STYLES --- */
+        #win-newspaper .window-content {
+            background-color: #f4f1ea;
+            /* Off-white paper */
+            color: #1a1a1a;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #win-newspaper .title-bar {
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-family: sans-serif;
+        }
+
+        .paper-container {
+            padding: 2rem 3rem;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .paper-header {
+            text-align: center;
+            border-bottom: 3px double #000;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+        }
+
+        .paper-title {
+            font-family: 'Playfair Display', serif;
+            /* Fallback to serif if not available */
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .paper-meta {
+            font-style: italic;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .paper-headline {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0 0 1rem 0;
+            text-align: center;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            /* Condensed feel */
+        }
+
+        .paper-subhead {
+            font-size: 1.2rem;
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #444;
+        }
+
+        .paper-layout {
+            column-count: 3;
+            column-gap: 2rem;
+            column-rule: 1px solid #ccc;
+            text-align: justify;
+        }
+
+        .paper-layout p {
+            margin-top: 0;
+            font-size: 1rem;
+            line-height: 1.5;
+            text-indent: 1.5em;
+        }
+
+        .paper-layout p::first-letter {
+            font-size: 2em;
+            float: left;
+            line-height: 0.8;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+
+        .paper-box {
+            border: 2px solid #000;
+            padding: 10px;
+            margin-bottom: 1rem;
+            break-inside: avoid;
+            background: #fff;
+        }
+
+        .paper-box h4 {
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+        }
+
+        .paper-img-placeholder {
+            width: 100%;
+            height: 150px;
+            background: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .page-nav {
+            background: #e0ddd5;
+            padding: 10px;
+            border-top: 2px solid #888;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: #34495e;
+        }
+
+        .nav-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Tweaks for different pages */
+        .layout-2col {
+            column-count: 2;
+        }
+
+        .hidden-page {
+            display: none;
+        }
+    </style>
+    <style>
+        /* --- NOTIFICATION SPAM SYSTEM --- */
+        #notification-area {
+            position: fixed;
+            bottom: 60px;
+            /* Above tray */
+            right: 20px;
+            display: flex;
+            flex-direction: column-reverse;
+            /* Newest at bottom */
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+            /* Let clicks pass through area */
+        }
+
+        .toast-notification {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 280px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            pointer-events: auto;
+            /* Re-enable clicks on toasts */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideIn 0.3s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .toast-content {
+            flex-grow: 1;
+            margin-right: 10px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #888;
+        }
+
+        .toast-close:hover {
+            color: #fff;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* SYSTEM TRAY */
+        #system-tray {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 20px;
+            z-index: 10000;
+            box-sizing: border-box;
+        }
+
+        .tray-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+            font-size: 18px;
+        }
+
+        .tray-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .bell-active {
+            color: #ffcc00;
+            /* Yellow bell */
+            animation: ring 4s infinite;
+        }
+
+        .bell-muted {
+            color: #555;
+            position: relative;
+        }
+
+        /* Slash for muted state */
+        .bell-muted::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #f00;
+            transform: rotate(45deg);
+        }
+
+        @keyframes ring {
+            0% {
+                transform: rotate(0);
+            }
+
+            5% {
+                transform: rotate(10deg);
+            }
+
+            10% {
+                transform: rotate(-10deg);
+            }
+
+            15% {
+                transform: rotate(10deg);
+            }
+
+            20% {
+                transform: rotate(0);
+            }
+
+            100% {
+                transform: rotate(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="desktop">
+        <!-- Icon 1: Vigilancia -->
+        <div class="icon" onclick="openWindow('win-vigilancia')">
+            <div class="icon-img">👁️</div>
+            <div class="icon-label">Vigilancia.exe</div>
+        </div>
+
+        <!-- Icon 2: Metrics -->
+        <div class="icon" onclick="openWindow('win-metrics')">
+            <div class="icon-img">📈</div>
+            <div class="icon-label">User_Metrics</div>
+        </div>
+
+        <!-- Icon 3: Papelera -->
+        <div class="icon" onclick="trashAlert()">
+            <div class="icon-img">🗑️</div>
+            <div class="icon-label">Tus Sueños</div>
+        </div>
+
+        <!-- Icon 4: Troll App -->
+        <div class="icon" onclick="openWindow('win-mre')">
+            <div class="icon-img">❓</div>
+            <div class="icon-label">¿Quién es Mr. E?</div>
+        </div>
+
+        <!-- NEW: LOW ENGAGEMENT FOLDER -->
+        <div class="icon" onclick="openWindow('win-low-engagement')" style="margin-top:20px;">
+            <div class="icon-img">📉</div>
+            <div class="icon-label" style="font-size: 10px; width: 100px; max-width: 100%;">Contenido que no garpa.dir
+            </div>
+        </div>
+
+        <!-- NEW: NEWSPAPER APP -->
+        <div class="icon" onclick="openWindow('win-newspaper')">
+            <div class="icon-img">📰</div>
+            <div class="icon-label">DIARIO_REALIDAD.exe</div>
+        </div>
+    </div>
+
+    <!-- Window: Vigilancia -->
+    <div id="win-vigilancia" class="window" style="top: 50px; left: 150px; width: 450px; height: 550px;">
+        <div class="title-bar">
+            <span>Vigilancia.exe // PANEL DE CONTROL DE AMENAZAS</span>
+            <div class="close-btn" onclick="closeWindow('win-vigilancia')">x</div>
+        </div>
+        <div class="window-content" style="padding: 0; background: #000;">
+            <div class="threat-grid">
+
+                <div class="threat-entry">
+                    <span class="threat-target">&gt; NUDE PROJECT</span>
+                    <span class="threat-analysis">ESTADO: Generan una comunidad mediante un LifeStyle. <span
+                            class="status-high">RIESGO: ALTO</span>.</span>
+                </div>
+
+                <div class="threat-entry">
+                    <span class="threat-target">&gt; VICIO</span>
+                    <span class="threat-analysis">ANOMALÍA: Marketing disruptivo. Genera lealtad real. <span
+                            class="status-action">ACCIÓN: Intentar saturar.</span></span>
+                </div>
+
+                <div class="threat-entry blink-critical">
+                    <span class="threat-target" style="color: #ff3333;">&gt; LA REVUELTA</span>
+                    <span class="threat-analysis"><span class="status-critical">⚠️ NIVEL DE AMENAZA: CRÍTICO</span>.
+                        Origen de la disidencia. Ubicación: Desconocida.</span>
+                </div>
+
+                <div class="threat-entry">
+                    <span class="threat-target">&gt; MARTY SUPREME</span>
+                    <span class="threat-analysis">OBSERVACIÓN: Estética inusual, genera perseguir tus sueños mediante el
+                        foco y la disciplina. Resistencia a la estandarización.</span>
+                </div>
+
+                <div class="threat-entry">
+                    <span class="threat-target">&gt; PUTOS MODERNOS</span>
+                    <span class="threat-analysis"><span class="status-error">ERROR DE SISTEMA</span>: Sarcasmo
+                        incompatible con Dopa-OS. Imposible de moderar.</span>
+                </div>
+
+                <div class="threat-entry">
+                    <span class="threat-target">&gt; MILFSHAKES</span>
+                    <span class="threat-analysis"><span class="status-critical">⚠️ NIVEL DE AMENAZA: CRÍTICO</span>.NO
+                        DEPENDEN DEL ALGORITMO, SON ANTIMARKETING Y MIENTRAS MENOS BUSCAN MAS GENERAN. <span
+                            class="status-high">RIESGO MUY ALTO</span></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Window: Metrics -->
+    <div id="win-metrics" class="window" style="top: 200px; left: 300px; width: 350px;">
+        <div class="title-bar">
+            <span>Attention Span Analyzer</span>
+            <div class="close-btn" onclick="closeWindow('win-metrics')">x</div>
+        </div>
+        <div class="window-content">
+            <p>Real-time Dopamine Levels:</p>
+            <div class="graph-container" id="fake-graph">
+                <!-- Bars generated by JS -->
+            </div>
+            <p style="font-size:0.8em; margin-top:5px;">Status: <span
+                    style="color:red; font-weight:bold;">DEGRADING</span></p>
+        </div>
+    </div>
+
+    <!-- Window: Mr. E Troll -->
+    <div id="win-mre" class="window" style="top: 80px; left: 80px; width: 400px; height: 350px;">
+        <div class="title-bar">
+            <span>C:\Users\Admin\Mr_E_Identity.exe</span>
+            <div class="close-btn" onclick="closeWindow('win-mre')">x</div>
+        </div>
+        <div class="window-content">
+
+            <div id="scroll-bait-container">
+                <div id="bait-content">
+                    <!-- Text injected by JS -->
+                </div>
+            </div>
+
+            <div id="camera-request-screen" class="full-overlay">
+                <div style="text-align:center; padding: 20px;">
+                    <p>Dopa-OS requiere acceso visual para identificar al sujeto.</p>
+                    <button class="camera-btn" onclick="activateCamera()">PERMITIR ACCESO</button>
+                </div>
+            </div>
+
+            <div id="final-reveal-screen" class="full-overlay">
+                <video id="user-webcam" autoplay playsinline></video>
+                <div class="reveal-text">TODOS LO SOMOS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Window: Low Engagement Analyzer -->
+    <div id="win-low-engagement" class="window"
+        style="top: 60px; left: 60px; width: 850px; height: 550px; display: none;">
+        <div class="title-bar">
+            <span>Contenido que no garpa</span>
+            <div class="close-btn" onclick="closeWindow('win-low-engagement')">x</div>
+        </div>
+        <div class="window-content">
+            <!-- MAIN VIEW (The Grid) -->
+            <div id="le-main-view">
+                <div class="le-header">
+                    <h2>AUDITORÍA DE CONTENIDO HISTÓRICO</h2>
+                    <span>ESTADO: NO APTO PARA ALGORITMO (BAJO RENDIMIENTO)</span>
+                </div>
+
+                <div class="le-grid">
+                    <!-- Card 1: PINK FLOYD -->
+                    <div class="le-card" onclick="showDetailComp('pinkfloyd')">
+                        <div class="le-system-note">ERROR CRÍTICO: Tasa de rebote 99%.</div>
+                        <div class="le-card-content">
+                            <h3>PINK_FLOYD.wav</h3>
+                            <div class="le-tagline">"Resistencia a la inmediatez."</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: MARADONA -->
+                    <div class="le-card" onclick="showDetailComp('maradona')">
+                        <div class="le-system-note">RIESGO: Brand Safety Alto.</div>
+                        <div class="le-card-content">
+                            <h3>DIEGO_10.img</h3>
+                            <div class="le-tagline">"La belleza del error humano."</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: CANSERBERO -->
+                    <div class="le-card" onclick="showDetailComp('canserbero')">
+                        <div class="le-system-note">ERROR: Densidad Semántica Excesiva.</div>
+                        <div class="le-card-content">
+                            <h3>CANSERBERO.mp3</h3>
+                            <div class="le-tagline">"La lucha hecha verbo."</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: THE BEATLES -->
+                    <div class="le-card" onclick="showDetailComp('beatles')">
+                        <div class="le-system-note">OBSOLETO: Visualmente aburrido.</div>
+                        <div class="le-card-content">
+                            <h3>ABBEY_ROAD.jpg</h3>
+                            <div class="le-tagline">"Historia sin efectos especiales."</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: TIMOTHEE CHALAMET -->
+                    <div class="le-card" onclick="showDetailComp('chalamet')">
+                        <div class="le-system-note">ERROR: Exceso de Miradas Intensas.</div>
+                        <div class="le-card-content">
+                            <h3>TIMOTHEE.img</h3>
+                            <div class="le-tagline">"El poder del silencio."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="le-footer">
+                    SYSTEM_STATUS: PURGING "MEANINGFUL CONTENT"... OPTIMIZING FOR DOPAMINE HITS...
+                </div>
+            </div>
+
+            <!-- DETAIL VIEW (Hidden Containers) -->
+            <div id="le-details-view" style="display: none;">
+
+                <!-- PINK FLOYD DETAIL -->
+                <div id="detail-pinkfloyd" class="le-detail-content">
+                    <button class="le-back-btn" onclick="showGridComp()">
+                        < VOLVER A DESCARTES</button>
+                            <h2 class="le-detail-title">ANÁLISIS DE CASO: PINK FLOYD</h2>
+                            <div class="icon-big" style="text-align:center; font-size: 3rem; margin-bottom: 20px;">🌈
+                            </div>
+                            <div class="le-detail-body">
+                                "La resistencia a la inmediatez. Crear una obra que exige ser escuchada entera, sin
+                                skip, sin shuffle. Arte que respira."
+                                <br><br>
+                                <strong>ANÁLISIS DEL SISTEMA:</strong> ERROR CRÍTICO. Intros de +2 minutos. Temas de 26
+                                minutos. El usuario promedio cierra la pestaña a los 4 segundos. Contenido ineficiente.
+                            </div>
+                </div>
+
+                <!-- MARADONA DETAIL -->
+                <div id="detail-maradona" class="le-detail-content">
+                    <button class="le-back-btn" onclick="showGridComp()">
+                        < VOLVER A DESCARTES</button>
+                            <h2 class="le-detail-title">ANÁLISIS DE CASO: MARADONA</h2>
+                            <div class="icon-big" style="text-align:center; font-size: 3rem; margin-bottom: 20px;">🔟
+                            </div>
+                            <div class="le-detail-body">
+                                "La resiliencia del barro. La belleza del error humano. Caer y levantarse ante los ojos
+                                del mundo sin edición ni filtros."
+                                <br><br>
+                                <strong>ANÁLISIS DEL SISTEMA:</strong> RIESGO DE BRAND SAFETY ALTO. Figura inestable,
+                                polémico, estéticamente sucio. No monetizable para marcas seguras.
+                            </div>
+                </div>
+
+                <!-- CANSERBERO DETAIL -->
+                <div id="detail-canserbero" class="le-detail-content">
+                    <button class="le-back-btn" onclick="showGridComp()">
+                        < VOLVER A DESCARTES</button>
+                            <h2 class="le-detail-title">ANÁLISIS DE CASO: CANSERBERO</h2>
+                            <div class="icon-big" style="text-align:center; font-size: 3rem; margin-bottom: 20px;">🎤
+                            </div>
+                            <div class="le-detail-body">
+                                "La lucha hecha verbo. Transformar el dolor real en poesía eterna. 'Es Épico' no entra
+                                en un TikTok de 15 segundos."
+                                <br><br>
+                                <strong>ANÁLISIS DEL SISTEMA:</strong> DENSIDAD SEMÁNTICA EXCESIVA. Demasiada letra.
+                                Sentimiento negativo predominante. El usuario promedio no lee subtítulos ni tolera la
+                                incomodidad.
+                            </div>
+                </div>
+
+                <!-- BEATLES DETAIL -->
+                <div id="detail-beatles" class="le-detail-content">
+                    <button class="le-back-btn" onclick="showGridComp()">
+                        < VOLVER A DESCARTES</button>
+                            <h2 class="le-detail-title">ANÁLISIS DE CASO: THE BEATLES</h2>
+                            <div class="icon-big" style="text-align:center; font-size: 3rem; margin-bottom: 20px;">🚶
+                            </div>
+                            <div class="le-detail-body">
+                                "Hacer historia caminando juntos. La revolución no necesitó efectos especiales, solo
+                                necesitó canciones."
+                                <br><br>
+                                <strong>ANÁLISIS DEL SISTEMA:</strong> FORMATO OBSOLETO. Visualmente aburrido (4 tipos
+                                caminando). Falta saturación de color, cortes rápidos y retención de audiencia en los
+                                primeros 3 segundos.
+                            </div>
+                </div>
+
+                <!-- CHALAMET DETAIL -->
+                <div id="detail-chalamet" class="le-detail-content">
+                    <button class="le-back-btn" onclick="showGridComp()">
+                        < VOLVER A DESCARTES</button>
+                            <h2 class="le-detail-title">ANÁLISIS DE CASO: TIMOTHEE CHALAMET</h2>
+                            <div class="icon-big" style="text-align:center; font-size: 3rem; margin-bottom: 20px;">🍑
+                            </div>
+                            <div class="le-detail-body">
+                                "El poder del silencio. No hace falta gritar para que te escuchen. La vulnerabilidad
+                                como arma masiva."
+                                <br><br>
+                                <strong>ANÁLISIS DEL SISTEMA:</strong> ERROR. Tasa de picos de dopamina insuficiente.
+                                Demasiada sutileza para el ojo entrenado en TikTok.
+                            </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Window: The Dopamine Daily -->
+    <div id="win-newspaper" class="window" style="top: 40px; left: 100px; width: 800px; height: 90vh; display: none;">
+        <div class="title-bar">
+            <span>The Dopamine Daily - Digital Edition</span>
+            <div class="close-btn" onclick="closeWindow('win-newspaper')">x</div>
+        </div>
+        <div class="window-content">
+
+            <!-- PAGE 1: PORTADA -->
+            <div id="page-1" class="paper-container">
+                <div class="paper-header">
+                    <h1 class="paper-title">EL DIARIO DOPAMÍNICO</h1>
+                    <div class="paper-meta">
+                        <span>EDICIÓN: CRÓNICA DE UNA MUERTE SCROLLEADA</span>
+                        <span>FECHA: HOY (O AYER, NO IMPORTA)</span>
+                        <span>PRECIO: TU ATENCIÓN</span>
+                    </div>
+                </div>
+
+                <h2 class="paper-headline">CONVERSACIONES CARA A CARA DECLARADAS 'ACTIVIDAD DE ALTO ESFUERZO
+                    COGNITIVO'
+                </h2>
+                <h3 class="paper-subhead">Ministerio de Salud Mental confirma: hablar sin pantalla genera
+                    ansiedad en
+                    94% de la población. Límite recomendado: 12 minutos/día.</h3>
+
+                <div class="paper-layout">
+                    <p>En un estudio revolucionario realizado por la Universidad de la Procrastinación, se
+                        confirmó lo
+                        que muchos temían: mirar a los ojos a otra persona provoca caídas drásticas en los
+                        niveles de
+                        dopamina.</p>
+                    <p>"Es agotador", confiesa un sujeto de prueba de 22 años. "No hay botón de like, no puedo
+                        adelantar
+                        la conversación a 2x y la resolución de la cara de mi madre es demasiado alta. Me da
+                        miedito".
+                    </p>
+
+                    <div class="paper-box">
+                        <h4>ÚLTIMO MOMENTO</h4>
+                        <p>Usuario logra concentrarse más de 20 segundos en un texto sin imágenes. Médicos
+                            estudian su
+                            cerebro.</p>
+                    </div>
+
+                    <p>Expertos sugieren que las interacciones humanas se limiten a enviar memes. "Si no podés
+                        decirlo
+                        con un sticker de Shrek, quizás no vale la pena decirlo", afirmó el Ministro de Evasión
+                        Social.
+                    </p>
+                    <p>Mientras tanto, una nueva terapia de shock está ganando popularidad: sentar a dos
+                        personas en una
+                        mesa sin teléfonos. Los resultados han sido catastróficos, con ambos participantes
+                        fingiendo
+                        leer la etiqueta de los condimentos para evitar el contacto visual.</p>
+
+                    <div class="paper-box">
+                        <h4>COLUMNA DE OPINIÓN</h4>
+                        <p>¿Cansado de tu algoritmo? CONOCÉ A TU MEDIA NARANJA ALGORÍTMICA: Alguien que odia
+                            exactamente
+                            las mismas cosas que vos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: TRENDS & TIKTOK -->
+            <div id="page-2" class="paper-container hidden-page">
+                <div class="paper-header">
+                    <h2 class="paper-title">TENDENCIAS & CRISIS</h2>
+                    <div class="paper-meta">Sección: Geopolítica del Cringe</div>
+                </div>
+
+                <div class="paper-layout layout-2col">
+                    <h2 style="margin-top:0;">INFLUENCER DESCUBRE QUE LEER 3 PÁRRAFOS NO DA LIKES</h2>
+                    <div class="paper-img-placeholder">[FOTO: Influencer llorando con filtro de perro]</div>
+                    <p>La tragedia golpeó a @SoyTuDopamina cuando intentó compartir una reseña literaria de tres
+                        párrafos. "Perdí 40.000 seguidores en dos minutos", sollozó en un vivo. "Pensé que a la
+                        gente le
+                        importaba lo que pienso, no solo mi outfit".</p>
+                    <p>Para recuperar su audiencia, tuvo que subir cinco fotos en bikini y un video bailando una
+                        canción
+                        que odia. El equilibrio universal fue restaurado.</p>
+
+                    <div class="paper-box" style="background:#e8e8e8;">
+                        <h4>ENCUESTA NACIONAL</h4>
+                        <p><strong>¿Cuántos libros leíste este año?</strong></p>
+                        <ul>
+                            <li>0 (98%)</li>
+                            <li>Empecé uno pero me dormí (1%)</li>
+                            <li>Mentira, vi la peli (1%)</li>
+                        </ul>
+                    </div>
+
+                    <div class="paper-box">
+                        <h4>VIRAL</h4>
+                        <p>"Challenge de comer jabón regresa en forma de fichas". Darwin sonríe desde su tumba.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 3: LECTURA & ATENCIÓN -->
+            <div id="page-3" class="paper-container hidden-page">
+                <div class="paper-header">
+                    <h2 class="paper-title">LECTURA & OLVIDO</h2>
+                    <div class="paper-meta">"TL;DR" - El Lema de una Generación</div>
+                </div>
+
+                <div class="paper-layout">
+                    <blockquote><strong>"Toda la información del mundo en tu bolsillo, y la usás para ver gatos
+                            cayéndose."</strong></blockquote>
+
+                    <h3>LIBROS REIMPRESOS: MÁXIMO 280 CARACTERES POR PÁGINA</h3>
+                    <p>Las editoriales se rinden. Moby Dick será reeditado como un hilo de Twitter impreso.
+                        "Llamadme
+                        Ismael... 🧵(1/5400)".</p>
+                    <p>Los críticos celebran la medida. "Finalmente podré leer un clásico mientras espero que
+                        cargue mi
+                        partida de LoL", comentó un intelectual moderno.</p>
+
+                    <div class="paper-img-placeholder">[GRAFICO: Tu capacidad de atención vs. Un Pez Dorado]
+                    </div>
+
+                    <div class="paper-box">
+                        <h4>BREAKING NEWS</h4>
+                        <p>RÉCORD NACIONAL: Martín López (28) leyó un artículo entero sin abrir otra pestaña. Su
+                            familia
+                            está preocupada y busca atención médica.</p>
+                    </div>
+
+                    <h3>COLUMNAS INTERRUMPIDAS</h3>
+                    <p><strong>La Crisis Climática y có—</strong><br><em>[NOTA DEL EDITOR: El autor se distrajo
+                            con una
+                            notificación de WhatsApp y nunca terminó esta columna.]</em></p>
+                    <br>
+                    <p><strong>La importancia de la profundi—</strong><br><em>[NOTA DEL EDITOR: El autor está
+                            scrolleando en Instagram hace 3 horas.]</em></p>
+                </div>
+            </div>
+
+            <!-- PAGE 4: CULTURA -->
+            <div id="page-4" class="paper-container hidden-page">
+                <div class="paper-header">
+                    <h2 class="paper-title">CULTURA RÁPIDA</h2>
+                    <div class="paper-meta">Museos y Arte en 15 segundos</div>
+                </div>
+
+                <div class="paper-layout layout-2col">
+                    <h3>CINE COLAPSA: PELÍCULAS DE 90 SEGUNDOS GANAN OSCARS</h3>
+                    <p>La Academia anuncia nueva categoría: "Mejor Película que podés ver en el baño". Scorsese
+                        declaró
+                        entre lágrimas que el cine ha muerto, pero nadie escuchó porque su video duraba más de
+                        un
+                        minuto.</p>
+
+                    <div class="paper-box">
+                        <h4>MICRO-RESEÑAS DE CLÁSICOS</h4>
+                        <p><strong>El Padrino:</strong> ⭐⭐⭐⭐⭐ "Muy larga. No salen bailes de TikTok."</p>
+                        <p><strong>Oppenheimer:</strong> ⭐⭐⭐⭐⭐ "Bomba va PUM. Ruido fuerte. Me gustó."</p>
+                        <p><strong>Barbie:</strong> ⭐⭐⭐⭐ "Mucho rosado. Faltó más Ryan Gosling sin remera."</p>
+                    </div>
+
+                    <div class="paper-box">
+                        <h4>AGENDA CULTURAL</h4>
+                        <p><strong>Museo Express:</strong> Recorré el Louvre en 47 segundos (corriendo y
+                            grabando con
+                            GoPro).</p>
+                        <p><strong>Don Quijote:</strong> Resumen en emojis. 👴🐴🗡️🌪️🤪</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 5: PRODUCTIVIDAD -->
+            <div id="page-5" class="paper-container hidden-page">
+                <div class="paper-header">
+                    <h2 class="paper-title">PRODUCTIVIDAD TÓXICA</h2>
+                    <div class="paper-meta">Hacks que no funcionan para gente que no trabaja</div>
+                </div>
+
+                <div class="paper-layout">
+                    <h3>RENUNCIAN PARA SER INFLUENCERS: NINGUNO LLEGA A 200 SEGUIDORES</h3>
+                    <div class="paper-img-placeholder">[FOTO: Ex-contador llorando sobre un aro de luz LED]
+                    </div>
+                    <p>Una ola de renuncias masivas golpea al sector corporativo. Miles de jóvenes abandonan sus
+                        trabajos seguros para "vivir de las redes".</p>
+                    <p>El problema: nadie quiere verlos desayunar tostadas con palta. "Pensé que mi vida era
+                        interesante", declara un ex-abogado. "Resulta que soy aburrido y pobre".</p>
+
+                    <div class="paper-box">
+                        <h4>CLASIFICADOS</h4>
+                        <p><strong>VENDO IDEA MILLONARIA:</strong> Es una App tipo Uber pero para pasear
+                            hamsters. No sé
+                            programar. Precio: 550k USD.</p>
+                        <p><strong>ALQUILO:</strong> Cuenta de ChatGPT Plus compartida con 47 personas. Solo
+                            turno
+                            madrugada.</p>
+                        <p><strong>BUSCO:</strong> Alguien que termine mis proyectos por mí (pago con
+                            visibilidad).</p>
+                    </div>
+
+                    <p><strong>Multitasking = Hacer 7 cosas mal a la vez.</strong> Estudios confirman que
+                        intentar
+                        trabajar, escuchar un podcast, responder mails y ver una serie al mismo tiempo reduce el
+                        IQ a
+                        niveles de un helecho.</p>
+                </div>
+            </div>
+
+            <!-- PAGE 6: AMOR -->
+            <div id="page-6" class="paper-container hidden-page">
+                <div class="paper-header">
+                    <h2 class="paper-title">AMOR DIGITAL</h2>
+                    <div class="paper-meta">Relaciones en tiempos de WiFi débil</div>
+                </div>
+
+                <div class="paper-layout">
+                    <h3>MATRIMONIOS POR WHATSAPP: CONVIVEN PERO NO SE HABLAN</h3>
+                    <p>Parejas de todo el mundo reportan que ya no usan sus cuerdas vocales. "Le mando un reel a
+                        mi
+                        esposa que está sentada al lado mío para decirle que la quiero", comenta Juan (34).</p>
+                    <p>Las discusiones ahora se resuelven por chat porque "en persona no puedo borrar el mensaje
+                        si me
+                        arrepiento".</p>
+
+                    <div class="paper-img-placeholder">[IMAGEN QUE NO CARGÓ PORQUE TU WIFI ES MALO]</div>
+
+                    <div class="paper-box" style="border: 2px dashed red;">
+                        <h4>ADVERTENCIA SANITARIA</h4>
+                        <p><strong>Audio > 1 min:</strong> Aumenta los niveles de cortisol y el riesgo de
+                            homicidio
+                            pasional en el receptor. Sé breve.</p>
+                    </div>
+
+                    <div class="paper-box">
+                        <h4>LA PREGUNTA DEL MILLÓN</h4>
+                        <p>¿Para qué ir al psicólogo si el algoritmo te conoce mejor? Él sabe que estás triste
+                            antes que
+                            vos. Dejate abrazar por la Big Data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="page-nav">
+                <button id="nav-prev" class="nav-btn" onclick="changePage(-1)" disabled>ANTERIOR</button>
+                <span id="page-indicator">PÁGINA 1 DE 6</span>
+                <button id="nav-next" class="nav-btn" onclick="changePage(1)">SIGUIENTE</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notification-area"></div>
+
+    <!-- System Tray -->
+    <div id="system-tray">
+        <div id="zen-toggle" class="tray-icon bell-active" onclick="toggleSpam()" title="Modo Zen">🔔</div>
+    </div>
+
+    <script>
+        // Window Management
+        function openWindow(id) {
+            const win = document.getElementById(id);
+            win.style.display = 'flex';
+            // Bring to front logic could be added here
+            win.style.zIndex = 100;
+        }
+
+        function closeWindow(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function trashAlert() {
+            alert("Error: System Full. Cannot delete 'Tus Sueños'.\n\nReason: File corrupted by tiktok.");
+        }
+
+        // Fake Graph Animation
+        const graph = document.getElementById('fake-graph');
+        setInterval(() => {
+            // Create a random bar
+            const bar = document.createElement('div');
+            bar.style.position = 'absolute';
+            bar.style.bottom = '0';
+            bar.style.left = '100%';
+            bar.style.width = '5px';
+            const height = Math.random() * 100;
+            bar.style.height = height + '%';
+            bar.style.background = height > 80 ? 'red' : '#00ff00';
+
+            graph.appendChild(bar);
+
+            // Animate bars moving left
+            const bars = graph.children;
+            for (let i = 0; i < bars.length; i++) {
+                let left = parseFloat(bars[i].style.left);
+                left -= 2; // Speed
+                bars[i].style.left = left + '%';
+                if (left < -5) {
+                    graph.removeChild(bars[i]);
+                }
+            }
+        }, 100);
+
+        // Draggable Windows (Simple implementation)
+        document.querySelectorAll('.title-bar').forEach(bar => {
+            bar.addEventListener('mousedown', function (e) {
+                const win = this.parentElement;
+                let shiftX = e.clientX - win.getBoundingClientRect().left;
+                let shiftY = e.clientY - win.getBoundingClientRect().top;
+
+                win.style.zIndex = 1000; // Bring to front
+
+                function moveAt(pageX, pageY) {
+                    win.style.left = pageX - shiftX + 'px';
+                    win.style.top = pageY - shiftY + 'px';
+                }
+
+                function onMouseMove(event) {
+                    moveAt(event.pageX, event.pageY);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                bar.onmouseup = function () {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    bar.onmouseup = null;
+                };
+            });
+        });
+
+        // --- Mr. E App Logic ---
+        const baitContent = document.getElementById('bait-content');
+        const scrollContainer = document.getElementById('scroll-bait-container');
+
+        function populateBait() {
+            const lines = [
+                "> Escaneando base de datos global...",
+                "> Analizando patrones de comportamiento...",
+                "> ¿Buscás un culpable?",
+                "> Filtrando miembros de 'La Revuelta'... [NEGATIVO]",
+                "> No es el algoritmo...",
+                "> Calculando tu tiempo en pantalla...",
+                "> Rastreando fuente de dopamina...",
+                "> Verificando historial de navegación...",
+                "> Descartando sospechosos externos...",
+                "> ¿Creés que tenés el control?",
+                "> Accediendo a la cámara...",
+                "> [SCROLL PARA MÁS RESULTADOS]"
+            ];
+            let content = "";
+            for (let i = 0; i < 500; i++) {
+                content += lines[Math.floor(Math.random() * lines.length)] + "<br>";
+            }
+            baitContent.innerHTML = content;
+        }
+        populateBait();
+
+        scrollContainer.addEventListener('scroll', () => {
+            if (scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 50) {
+                document.getElementById('camera-request-screen').style.display = 'flex';
+            }
+        });
+
+        function activateCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const video = document.getElementById('user-webcam');
+                    video.srcObject = stream;
+                    document.getElementById('camera-request-screen').style.display = 'none';
+                    document.getElementById('final-reveal-screen').style.display = 'flex';
+                })
+                .catch(err => {
+                    console.error("Camera access denied:", err);
+                    alert("Sin acceso a cámara, la identidad permanece oculta.");
+                });
+        }
+
+
+        // --- Low Engagement / Descartes Script ---
+
+        function showDetailComp(id) {
+            // Hide main view
+            document.getElementById('le-main-view').style.display = 'none';
+
+            // Show details container
+            document.getElementById('le-details-view').style.display = 'flex';
+
+            // Hide all individual details
+            document.querySelectorAll('.le-detail-content').forEach(el => el.style.display = 'none');
+
+            // Show selected detail
+            const cleanId = 'detail-' + id;
+            document.getElementById(cleanId).style.display = 'block';
+        }
+
+        function showGridComp() {
+            // Show main view
+            document.getElementById('le-main-view').style.display = 'flex';
+
+            // Hide details container
+            document.getElementById('le-details-view').style.display = 'none';
+        }
+
+        // --- Newspaper App Logic ---
+        let currentPage = 1;
+        const totalPages = 6;
+
+        function changePage(direction) {
+            // Hide current
+            document.getElementById(`page-${currentPage}`).classList.add('hidden-page');
+
+            // Update index
+            currentPage += direction;
+
+            // Clamp values (safety)
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            // Show new
+            document.getElementById(`page-${currentPage}`).classList.remove('hidden-page');
+
+            // Update UI
+            document.getElementById('page-indicator').textContent = `PÁGINA ${currentPage} DE ${totalPages}`;
+
+            // Update Buttons
+            document.getElementById('nav-prev').disabled = (currentPage === 1);
+            document.getElementById('nav-next').disabled = (currentPage === totalPages);
+        }
+
+        // --- NOTIFICATION SYS ---
+        let spamActive = true;
+        let spamInterval;
+        const notificationArea = document.getElementById('notification-area');
+        const zenToggle = document.getElementById('zen-toggle');
+
+        const spamMessages = [
+            "🔥 Nuevo Match cerca de tu zona...",
+            "⚠️ BATERÍA SOCIAL: 12% (Crítico)",
+            "👀 Alguien revisó tu perfil hace 1 min.",
+            "Mr. Engagement: '¿Por qué dejaste de scrollear?'",
+            "Oferta: Felicidad instantánea a 50% OFF."
+        ];
+
+        function spawnNotification(message = null, duration = 5000) {
+            const text = message || spamMessages[Math.floor(Math.random() * spamMessages.length)];
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.innerHTML = `
+                <div class="toast-content">${text}</div>
+                <div class="toast-close" onclick="this.parentElement.remove()">×</div>
+            `;
+
+            notificationArea.appendChild(toast);
+
+            // Auto remove
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        function startSpam() {
+            if (!spamActive) return;
+            spamInterval = setInterval(() => {
+                if (spamActive) spawnNotification();
+            }, 3000 + Math.random() * 4000); // Random interval 3-7s
+        }
+
+        function toggleSpam() {
+            spamActive = !spamActive;
+
+            if (spamActive) {
+                // Activated (Chaos)
+                zenToggle.className = 'tray-icon bell-active';
+                startSpam();
+                spawnNotification("El caos ha regresado.", 4000);
+            } else {
+                // Muted (Zen Mode)
+                zenToggle.className = 'tray-icon bell-muted';
+                clearInterval(spamInterval);
+                notificationArea.innerHTML = ''; // Clear all
+                spawnNotification("Modo Zen activado. Disfruta el silencio... mientras dure.", 5000);
+            }
+        }
+
+        // Init
+        setTimeout(startSpam, 2000); // Start after 2s
+    </script>
+</body>
+
+</html>

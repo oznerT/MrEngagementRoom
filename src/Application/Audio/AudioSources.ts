@@ -10,7 +10,7 @@ export class AudioSource {
         this.manager = manager;
     }
 
-    update() {}
+    update() { }
 }
 export class ComputerAudio extends AudioSource {
     lastKey: string;
@@ -87,6 +87,11 @@ export class AmbienceAudio extends AudioSource {
                 volume: 0.4,
                 randDetuneScale: 0,
             });
+            this.manager.playAudio('dayInTheLife', {
+                volume: 0.3,
+                loop: true,
+                randDetuneScale: 0,
+            });
         });
     }
 
@@ -100,7 +105,7 @@ export class AmbienceAudio extends AudioSource {
         return (
             output_start +
             ((output_end - output_start) / (input_end - input_start)) *
-                (input - input_start)
+            (input - input_start)
         );
     }
 
