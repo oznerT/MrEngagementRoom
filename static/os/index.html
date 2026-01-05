@@ -113,6 +113,8 @@
             flex-direction: column;
             min-width: 300px;
             min-height: 200px;
+            overflow: hidden;
+            /* Prevent content spill */
         }
 
         .title-bar {
@@ -124,6 +126,8 @@
             align-items: center;
             font-weight: bold;
             cursor: grab;
+            flex-shrink: 0;
+            /* Never shrink title bar */
         }
 
         .close-btn {
@@ -146,7 +150,11 @@
         .window-content {
             padding: 10px;
             flex-grow: 1;
-            overflow: auto;
+            /* Take remaining space */
+            min-height: 0;
+            /* Allow shrinking inside flex container */
+            overflow-y: auto;
+            /* Scrollable */
         }
 
         /* Specific Window Styles */
@@ -755,6 +763,25 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        .tray-btn {
+            background: #c0c0c0;
+            color: black;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 2px 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 15px;
+            font-size: 14px;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        .tray-btn:active {
+            border-color: #808080 #fff #fff #808080;
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
         .bell-active {
             color: #ffcc00;
             /* Yellow bell */
@@ -1351,6 +1378,8 @@
 
     <!-- System Tray -->
     <div id="system-tray">
+        <!-- Exit Button -->
+        <div class="tray-btn" onclick="exitSystem()">SALIR DEL SISTEMA</div>
         <div id="zen-toggle" class="tray-icon bell-active" onclick="toggleSpam()" title="Modo Zen">🔔</div>
     </div>
 
@@ -1359,13 +1388,76 @@
         function openWindow(id) {
             const win = document.getElementById(id);
             win.style.display = 'flex';
-            // Bring to front logic could be added here
-            win.style.zIndex = 100;
+            // Bring to front logic
+            win.style.zIndex = ++zIndexCounter;
         }
+
+        let zIndexCounter = 100;
 
         function closeWindow(id) {
             document.getElementById(id).style.display = 'none';
         }
+
+        // --- EXIT SYSTEM LOGIC ---
+        let isExiting = false;
+
+        function exitSystem() {
+            if (isExiting) return;
+            isExiting = true;
+
+            // Visual Update: Disable UI, show loading
+            const trayBtn = document.querySelector('.tray-btn');
+            if (trayBtn) {
+                trayBtn.style.opacity = '0.5';
+                trayBtn.style.pointerEvents = 'none';
+                trayBtn.innerText = "CERRANDO...";
+            }
+
+            // Remove any existing notifications to clean up
+            document.getElementById('notification-area').innerHTML = '';
+
+            // Visual feedback inside OS
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.background = '#ff0000';
+            toast.innerHTML = `<div class="toast-content" style="font-weight:bold; text-align:center;">CERRANDO SESIÓN... <span id="spinner">/</span></div>`;
+            document.getElementById('notification-area').appendChild(toast);
+
+            // Simple spinner animation
+            const spinner = toast.querySelector('#spinner');
+            let frames = ['/', '-', '\\', '|'];
+            let i = 0;
+            setInterval(() => {
+                spinner.innerText = frames[i++ % frames.length];
+            }, 100);
+
+            // Send special message to parent (3D World)
+            // Delay slightly to allow UI update to render
+            setTimeout(() => {
+                window.parent.postMessage({ type: 'exitToCongrats' }, '*');
+            }, 500);
+        }
+
+        // Global Key Listener
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Check if any window is open
+                const windows = Array.from(document.querySelectorAll('.window'));
+                const visibleWindows = windows.filter(win => win.style.display === 'flex');
+
+                if (visibleWindows.length > 0) {
+                    // Close the top-most window (highest z-index)
+                    visibleWindows.sort((a, b) => {
+                        return (parseInt(b.style.zIndex) || 0) - (parseInt(a.style.zIndex) || 0);
+                    });
+                    closeWindow(visibleWindows[0].id);
+                } else {
+                    // No windows open -> Exit System
+                    exitSystem();
+                }
+            }
+        });
+        // -------------------------
 
         function trashAlert() {
             alert("Error: System Full. Cannot delete 'Tus Sueños'.\n\nReason: File corrupted by tiktok.");
@@ -1398,18 +1490,29 @@
             }
         }, 100);
 
-        // Draggable Windows (Simple implementation)
+        // Draggable Windows (Corrected)
         document.querySelectorAll('.title-bar').forEach(bar => {
             bar.addEventListener('mousedown', function (e) {
                 const win = this.parentElement;
+
+                // Bring to front
+                win.style.zIndex = ++zIndexCounter;
+
                 let shiftX = e.clientX - win.getBoundingClientRect().left;
                 let shiftY = e.clientY - win.getBoundingClientRect().top;
 
-                win.style.zIndex = 1000; // Bring to front
+                // Remove transforms if any (centering hacks)
+                win.style.transform = 'none';
 
                 function moveAt(pageX, pageY) {
-                    win.style.left = pageX - shiftX + 'px';
-                    win.style.top = pageY - shiftY + 'px';
+                    // Clamp to viewport
+                    let newLeft = pageX - shiftX;
+                    let newTop = pageY - shiftY;
+
+                    // Simple bounds checking could go here
+
+                    win.style.left = newLeft + 'px';
+                    win.style.top = newTop + 'px';
                 }
 
                 function onMouseMove(event) {
@@ -1418,9 +1521,9 @@
 
                 document.addEventListener('mousemove', onMouseMove);
 
-                bar.onmouseup = function () {
+                document.onmouseup = function () {
                     document.removeEventListener('mousemove', onMouseMove);
-                    bar.onmouseup = null;
+                    document.onmouseup = null;
                 };
             });
         });
@@ -1453,6 +1556,7 @@
         populateBait();
 
         scrollContainer.addEventListener('scroll', () => {
+            // Tolerance check
             if (scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 50) {
                 document.getElementById('camera-request-screen').style.display = 'flex';
             }

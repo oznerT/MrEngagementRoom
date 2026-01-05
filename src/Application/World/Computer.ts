@@ -46,14 +46,19 @@ export default class Computer {
             context.fillStyle = '#FFD700'; // Gold/Yellow
             context.fillRect(0, 0, width, height);
 
+            // Red border
+            context.strokeStyle = '#FF0000';
+            context.lineWidth = 10;
+            context.strokeRect(0, 0, width, height);
+
             // Text configuration
-            context.font = 'bold 50px Arial';
-            context.fillStyle = '#000000'; // Black text
+            context.font = 'bold 40px Courier New'; // Terminal style
+            context.fillStyle = '#FF0000'; // Red text
             context.textAlign = 'center';
             context.textBaseline = 'middle';
 
             // Draw text
-            context.fillText('laRevuelta', width / 2, height / 2);
+            context.fillText('ENTRAR AL SISTEMA', width / 2, height / 2);
         }
 
         // Create texture
@@ -67,19 +72,15 @@ export default class Computer {
         });
 
         // Create mesh (Plane)
-        // Size: 220x60 units (Slightly larger to ensure coverage)
+        // Size: 220x60 units
         const geometry = new THREE.PlaneGeometry(220, 60);
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.name = 'enterHotspot'; // Name for raycaster
 
         // Position Logic:
-        // Screen Center (Debug) was Y=950.
-        // Bezel is below screen. Original was Y=380.
-        // X needs to be left. Original was X=-500.
-        // Z needs to be in front. Original Z=270. Debug Z=400.
-        // New Target: X=-550 (Left), Y=360 (Lower Bezel), Z=320 (Safe Depth)
-
-        mesh.position.set(-550, 360, 320);
-        mesh.rotation.set(-3 * Math.PI / 180, 0, 0); // Match monitor rotation
+        // Lower Bezel position
+        mesh.position.set(0, 360, 400); // 0 x to be center, 360 y for bezel, 400 z to be in front
+        mesh.rotation.set(-10 * Math.PI / 180, 0, 0); // Slight tilt
 
         this.scene.add(mesh);
     }

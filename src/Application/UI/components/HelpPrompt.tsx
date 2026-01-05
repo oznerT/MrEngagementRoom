@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import UIEventBus from '../EventBus';
 
-const HELP_TEXT = 'CLICKEÁ, DEJA DE RESISTIRTE';
+const HELP_TEXT = 'Click para acercarte al monitor. ESC para salir. M para silenciar.';
 
 type HelpPromptProps = {};
 

@@ -134,12 +134,12 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
                         <p style={styles.timerText}>{timeText}</p>
                     </div>
                     {volumeVisible && (
-                        <div style={styles.lastRowChild}>
+                        <div style={{ ...styles.lastRowChild, pointerEvents: 'auto' }}>
                             <MuteToggle />
                         </div>
                     )}
                     {freeCamVisible && (
-                        <div style={styles.lastRowChild}>
+                        <div style={{ ...styles.lastRowChild, pointerEvents: 'auto' }}>
                             <FreeCamToggle />
                         </div>
                     )}
@@ -151,7 +151,7 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
 
 const styles: StyleSheetCSS = {
     container: {
-        background: 'black',
+        background: '#000000',
         padding: 4,
         paddingLeft: 16,
         paddingRight: 16,
@@ -186,11 +186,11 @@ const styles: StyleSheetCSS = {
         // Optional: add specific container styles for the timer if needed
     },
     timerText: {
-        color: 'red',
+        color: '#FB0404',
         // Simple blinking effect using CSS animation would be better in a real CSS file,
         // but for inline styles we can't easily do keyframes without a style tag or external css.
         // We'll stick to red color as requested, and maybe add a text shadow for "glow".
-        textShadow: '0 0 5px red',
+        textShadow: '0 0 5px #FB0404',
         fontWeight: 'bold',
     }
 };

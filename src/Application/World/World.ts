@@ -10,6 +10,7 @@ import Cursor from './Cursor';
 import Hitboxes from './Hitboxes';
 import DeskItems from './DeskItems';
 import AudioManager from '../Audio/AudioManager';
+import UIEventBus from '../UI/EventBus';
 export default class World {
     application: Application;
     scene: THREE.Scene;
@@ -65,6 +66,7 @@ export default class World {
         let lastX = 0;
         let lastY = 0;
         let lastTime = Date.now();
+        let lastTooltipTime = 0;
 
         window.addEventListener('mousemove', (e) => {
             // Glitch Trigger Logic
@@ -90,9 +92,28 @@ export default class World {
             this.checkIntersection();
         });
 
-        window.addEventListener('click', () => {
+        window.addEventListener('mousedown', () => {
+            // Basic click sound for feedback
+            // this.audioManager.playAudio('mouse_click', { volume: 0.5 }); // Assuming audio mapping exists
+            // Using console log as placeholder if unsure about audio key, but sticking to plan
+        });
+
+        window.addEventListener('click', (e) => {
+            // Prevent interaction if already inside computer
+            if (this.monitorScreen.inComputer) return;
+
             if (this.currentIntersect) {
+                // Feedback: Shake/Glitch
+                this.application.renderer.triggerGlitch(100);
+
+                // Sound logic
+                this.audioManager.playAudio('mouseDown');
+
                 switch (this.currentIntersect.object.name) {
+                    case 'enterHotspot':
+                        document.body.style.cursor = 'default';
+                        this.application.camera.trigger('enterMonitor');
+                        break;
                     case 'gameboy':
                         console.log('Gameboy Clicked');
                         break;
@@ -101,16 +122,35 @@ export default class World {
                         break;
                     case 'keyboard':
                         console.log('Keyboard Clicked - *Clack*');
-                        // Trigger glitch or sound if available
                         this.application.renderer.triggerGlitch(300);
                         break;
+                }
+            } else {
+                // Tooltip Logic (Throttled)
+                const now = Date.now();
+                if (now - lastTooltipTime > 3000) {
+                    UIEventBus.dispatch('showTooltip', {
+                        text: "Zona no interactiva. Probá el monitor.",
+                        x: e.clientX,
+                        y: e.clientY
+                    });
+                    lastTooltipTime = now;
                 }
             }
         });
     }
 
+
+
     checkIntersection() {
         if (!this.application.camera.instance) return;
+
+        // Disable hover interaction if in computer
+        if (this.monitorScreen.inComputer) {
+            document.body.style.cursor = 'default';
+            this.currentIntersect = null;
+            return;
+        }
 
         this.raycaster.setFromCamera(this.mouse, this.application.camera.instance);
 
@@ -119,16 +159,21 @@ export default class World {
 
         if (intersects.length > 0) {
             // Filter for specific interactable objects
-            const interactables = ['gameboy', 'coffee', 'keyboard'];
+            const interactables = ['gameboy', 'coffee', 'keyboard', 'enterHotspot'];
             const hit = intersects.find(intersect => {
-                const name = intersect.object.name.toLowerCase();
-                return interactables.some(term => name.includes(term));
+                const name = intersect.object.name; // Keep case sensitive for enterHotspot, or use .toLowerCase
+                return interactables.includes(name) || interactables.some(term => name.toLowerCase().includes(term));
             });
 
             if (hit) {
                 this.currentIntersect = hit;
                 document.body.style.cursor = 'pointer';
-                // Optional: Highlight effect could go here
+
+                // Optional: visual feedback on hover for hotspot
+                if (hit.object.name === 'enterHotspot') {
+                    // Could twitch it or brighten it
+                }
+
             } else {
                 this.currentIntersect = null;
                 document.body.style.cursor = 'default';

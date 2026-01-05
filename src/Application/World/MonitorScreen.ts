@@ -7,6 +7,7 @@ import Resources from '../Utils/Resources';
 import Sizes from '../Utils/Sizes';
 import Camera from '../Camera/Camera';
 import EventEmitter from '../Utils/EventEmitter';
+import SessionTracker from '../Utils/SessionTracker';
 
 const SCREEN_SIZE = { w: 1280, h: 1024 };
 const IFRAME_PADDING = 32;
@@ -73,6 +74,7 @@ export default class MonitorScreen extends EventEmitter {
 
                 if (this.inComputer && !this.prevInComputer) {
                     this.camera.trigger('enterMonitor');
+                    SessionTracker.incrementEnters();
                 }
 
                 if (
@@ -148,6 +150,9 @@ export default class MonitorScreen extends EventEmitter {
         iframe.onload = () => {
             if (iframe.contentWindow) {
                 window.addEventListener('message', (event) => {
+                    // Security / Validation
+                    if (event.source !== iframe.contentWindow) return;
+
                     var evt = new CustomEvent(event.data.type, {
                         bubbles: true,
                         cancelable: false,
@@ -175,6 +180,40 @@ export default class MonitorScreen extends EventEmitter {
                     } else if (event.data.type === 'keyup') {
                         // @ts-ignore
                         evt.key = event.data.key;
+                    } else if (event.data.type === 'exitToCongrats') {
+                        // Clean Exit Sequence
+                        const EXIT_URL = '/saliste.html';
+                        SessionTracker.setExitMethod('button');
+
+                        // 1. Visual Exit
+                        this.camera.trigger('leftMonitor');
+                        this.shouldLeaveMonitor = false;
+                        this.mouseClickInProgress = false;
+                        this.inComputer = false;
+                        this.prevInComputer = false;
+
+                        // 2. Silence Audio (Safe access)
+                        // If audioManager is available globally or passed down, use it.
+                        // Assuming current access pattern via application
+                        // @ts-ignore
+                        if (this.application.world && this.application.world.audioManager) {
+                            // @ts-ignore
+                            this.application.world.audioManager.listener.setMasterVolume(0);
+                        }
+
+                        // 3. Navigate
+                        setTimeout(() => {
+                            window.location.assign(EXIT_URL);
+                        }, 500);
+
+                    } else if (event.data.type === 'exitMonitor') {
+                        // Deprecated fallback or for quick exit without redirect if needed
+                        this.camera.trigger('leftMonitor');
+                        this.shouldLeaveMonitor = false; // Reset potential flag
+                        // Force mouseup logic reset if needed
+                        this.mouseClickInProgress = false;
+                        this.inComputer = false; // Consistently updating state
+                        this.prevInComputer = false;
                     }
 
                     iframe.dispatchEvent(evt);

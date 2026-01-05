@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import UIEventBus from '../EventBus';
 import InfoOverlay from './InfoOverlay';
+import TooltipHint from './TooltipHint';
 
-interface InterfaceUIProps {}
+interface InterfaceUIProps { }
 
-const InterfaceUI: React.FC<InterfaceUIProps> = ({}) => {
+const InterfaceUI: React.FC<InterfaceUIProps> = ({ }) => {
     const [initLoad, setInitLoad] = useState(true);
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -40,8 +41,8 @@ const InterfaceUI: React.FC<InterfaceUIProps> = ({}) => {
 
     useEffect(() => {
         UIEventBus.on('enterMonitor', () => {
-            setVisible(false);
-            setInitLoad(false);
+            // setVisible(false); // Keep visible for persistent HUD
+            // setInitLoad(false); HTML overlay stays visible but non-interactive
             if (interfaceRef.current) {
                 interfaceRef.current.style.pointerEvents = 'none';
             }
@@ -64,6 +65,7 @@ const InterfaceUI: React.FC<InterfaceUIProps> = ({}) => {
             id="prevent-click"
         >
             <InfoOverlay visible={visible} />
+            <TooltipHint />
         </motion.div>
     ) : (
         <></>

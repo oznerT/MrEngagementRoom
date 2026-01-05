@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>La Revuelta | Salida</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #000000;
+            --muted: #888888;
+            --border: #000000;
+            --lr-yellow: #F0DC2F;
+            --grain-opacity: 0.04;
+        }
+
+        /* --- BASIC RESET --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.5;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- GRAIN OVERLAY --- */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: var(--grain-opacity);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* --- WATERMARK --- */
+        .watermark {
+            position: fixed;
+            bottom: -2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14vw;
+            font-weight: 900;
+            color: rgba(0, 0, 0, 0.03);
+            pointer-events: none;
+            user-select: none;
+            z-index: -1;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        /* --- LAYOUT --- */
+        .page-wrapper {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 40px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--fg);
+            margin-bottom: 110px;
+            text-transform: uppercase;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            font-weight: bold;
+        }
+
+        /* --- BLOQUE 1: MANIFIESTO --- */
+        .manifesto-section {
+            margin-bottom: 120px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            line-height: 1.05;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            margin-bottom: 60px;
+            max-width: 14ch;
+        }
+
+        .cuerpo {
+            font-size: 1.4rem;
+            max-width: 800px;
+            text-align: left;
+        }
+
+        .linea {
+            display: block;
+            margin-bottom: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .highlight-yellow {
+            background-image: linear-gradient(var(--lr-yellow), var(--lr-yellow));
+            background-size: 0% 1.1em;
+            background-repeat: no-repeat;
+            background-position: 0 80%;
+            transition: background-size 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            display: inline;
+        }
+
+        .highlight-yellow.painted {
+            background-size: 100% 1.1em;
+        }
+
+        /* --- CTA --- */
+        .cta-container {
+            margin-top: 60px;
+            text-align: left;
+        }
+
+        .btn-main {
+            box-sizing: border-box;
+            display: inline-flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: 16px 33px;
+            gap: 8px;
+
+            width: 394px;
+            max-width: 100%;
+            height: 60px;
+
+            background: transparent;
+            color: var(--fg);
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0px #000000;
+
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .btn-main:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .btn-main:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        .btn-main:active {
+            transform: translate(1px, 1px);
+            box-shadow: 0px 0px 0px #000000;
+        }
+
+        .btn-main .arrow {
+            margin-left: 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .microcopy {
+            display: block;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            header {
+                margin-bottom: 40px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .manifesto-section {
+                margin-bottom: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="watermark">LA REVUELTA</div>
+
+    <div class="page-wrapper">
+        <header>
+            <div class="brand">LA REVUELTA</div>
+            <div class="context">MR. ENGAGEMENT / SALIDA</div>
+        </header>
+
+        <!-- BLOQUE 1 -->
+        <main class="manifesto-section" id="bloque1">
+            <h1>Gracias por quedarte hasta el final.</h1>
+            <div class="cuerpo" id="typewriter-box">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <div class="cta-container" id="cta-box" style="visibility: hidden;">
+                <a href="/" class="btn-main" id="btn-restart">
+                    REINICIAR EXPERIENCIA <span class="arrow">→</span>
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const COPY = [
+            "Si llegaste hasta acá, hiciste todo el recorrido.",
+            "Mr. Engagement existe para mostrar un gesto simple:",
+            "<span class='highlight-yellow'>que, aunque sea por un segundo, la atención vuelva a ser tuya.</span>",
+            "No te queremos dar un discurso.",
+            "Solo decirte gracias por formar parte.",
+            "Nos vemos en la proxima!. laRevuelta"
+        ];
+
+        const state = {
+            typing: true,
+            salisteStart: Date.now()
+        };
+
+        async function typeEffect(element, html) {
+            let visibleContent = "";
+            let i = 0;
+            while (i < html.length && state.typing) {
+                if (html[i] === '<') {
+                    const tagEnd = html.indexOf('>', i);
+                    if (tagEnd !== -1) {
+                        visibleContent += html.substring(i, tagEnd + 1);
+                        i = tagEnd + 1;
+                    }
+                } else {
+                    visibleContent += html[i];
+                    element.innerHTML = visibleContent;
+                    i++;
+                    await new Promise(r => setTimeout(r, 22));
+                }
+            }
+            element.innerHTML = html;
+        }
+
+        async function runTypewriter() {
+            const box = document.getElementById('typewriter-box');
+            for (let i = 0; i < COPY.length; i++) {
+                if (!state.typing) break;
+                const p = document.createElement('span');
+                p.className = 'linea';
+                p.style.opacity = 1;
+                box.appendChild(p);
+
+                await typeEffect(p, COPY[i]);
+
+                if (!state.typing) break;
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            if (state.typing) {
+                const highlight = document.querySelector('.highlight-yellow');
+                if (highlight) {
+                    await new Promise(r => setTimeout(r, 400));
+                    highlight.classList.add('painted');
+                    await new Promise(r => setTimeout(r, 1200));
+                }
+            }
+            document.getElementById('cta-box').style.visibility = 'visible';
+            state.typing = false;
+        }
+
+        document.body.onclick = () => {
+            if (state.typing) {
+                state.typing = false;
+                const box = document.getElementById('typewriter-box');
+                box.innerHTML = '';
+                COPY.forEach(text => {
+                    const p = document.createElement('span');
+                    p.className = 'linea';
+                    p.style.opacity = 1;
+                    p.innerHTML = text;
+                    box.appendChild(p);
+
+                    const highlight = p.querySelector('.highlight-yellow');
+                    if (highlight) highlight.classList.add('painted');
+                });
+                document.getElementById('cta-box').style.visibility = 'visible';
+            }
+        };
+
+        window.onload = runTypewriter;
+    </script>
+</body>
+
+</html>

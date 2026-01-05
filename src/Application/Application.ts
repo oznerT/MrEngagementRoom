@@ -12,6 +12,7 @@ import World from './World/World';
 import Resources from './Utils/Resources';
 
 import sources from './sources';
+import SessionTracker from './Utils/SessionTracker';
 
 import Stats from 'stats.js';
 import Loading from './Utils/Loading';
@@ -63,6 +64,12 @@ export default class Application {
         this.camera.createControls();
         this.world = new World();
 
+        SessionTracker.init();
+
+        window.addEventListener('mousedown', () => {
+            SessionTracker.incrementClicks();
+        });
+
         this.ui = new UI();
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -94,6 +101,10 @@ export default class Application {
         this.camera.update();
         this.world.update();
         this.renderer.update();
+
+        if (this.time) {
+            SessionTracker.updateTime(this.time.delta);
+        }
         if (this.stats) this.stats.end();
     }
 
