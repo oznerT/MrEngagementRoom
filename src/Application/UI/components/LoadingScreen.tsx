@@ -188,6 +188,8 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                     src="/real_coin_logo.jpg"
                     alt="Coin Logo"
                     className="spinning-coin"
+                    width={200}
+                    height={200}
                     style={{ borderRadius: '50%' }}
                 />
             </div>
